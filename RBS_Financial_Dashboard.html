@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RBS Petrol Two-Wheeler — Financial Model Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --ink:     #0f1117;
+  --paper:   #f5f2ec;
+  --cream:   #ede9df;
+  --accent:  #c84b31;
+  --gold:    #d4a017;
+  --sage:    #3d6b4f;
+  --slate:   #2c3e50;
+  --muted:   #8a8070;
+  --card-bg: #faf8f4;
+  --border:  #ddd8cd;
+  --positive:#2e7d52;
+  --negative:#c0392b;
+  --warn:    #e67e22;
+  --shadow:  0 2px 16px rgba(15,17,23,.08), 0 1px 4px rgba(15,17,23,.04);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--paper);
+  font-family:'Outfit',sans-serif;
+  color:var(--ink);
+  min-height:100vh;
+  font-size:14px;
+}
+
+/* ── HEADER ── */
+.site-header{
+  background:var(--ink);
+  color:#fff;
+  padding:0 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  height:64px;
+  position:sticky;top:0;z-index:100;
+  border-bottom:3px solid var(--accent);
+}
+.site-header .logo{
+  font-family:'DM Serif Display',serif;
+  font-size:20px;letter-spacing:.02em;
+  display:flex;align-items:center;gap:10px;
+}
+.site-header .logo .dot{
+  width:10px;height:10px;border-radius:50%;
+  background:var(--accent);display:inline-block;
+}
+.site-header .subtitle{
+  font-family:'DM Mono',monospace;
+  font-size:11px;color:rgba(255,255,255,.45);
+  letter-spacing:.12em;text-transform:uppercase;
+}
+.header-badge{
+  background:var(--accent);
+  color:#fff;font-size:11px;font-weight:600;
+  padding:4px 12px;border-radius:2px;
+  letter-spacing:.08em;text-transform:uppercase;
+}
+
+/* ── TABS ── */
+.tabs-bar{
+  background:var(--cream);
+  border-bottom:1px solid var(--border);
+  padding:0 32px;
+  display:flex;gap:0;
+  position:sticky;top:64px;z-index:99;
+}
+.tab-btn{
+  padding:14px 22px;
+  border:none;background:transparent;
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;
+  color:var(--muted);cursor:pointer;
+  border-bottom:3px solid transparent;
+  transition:.2s;letter-spacing:.02em;
+  white-space:nowrap;
+}
+.tab-btn:hover{color:var(--ink);}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+
+/* ── CONTROLS STRIP ── */
+.controls-strip{
+  background:var(--card-bg);
+  border-bottom:1px solid var(--border);
+  padding:14px 32px;
+  display:flex;align-items:center;gap:24px;flex-wrap:wrap;
+}
+.ctrl-group{display:flex;align-items:center;gap:8px;}
+.ctrl-label{
+  font-size:11px;font-weight:600;color:var(--muted);
+  letter-spacing:.1em;text-transform:uppercase;
+}
+.ctrl-select,.ctrl-range-wrap{
+  display:flex;align-items:center;gap:8px;
+}
+.ctrl-select select{
+  border:1px solid var(--border);background:#fff;
+  color:var(--ink);font-family:'Outfit',sans-serif;
+  font-size:13px;padding:6px 28px 6px 10px;
+  border-radius:3px;cursor:pointer;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238a8070'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;
+}
+.ctrl-range-wrap{
+  gap:8px;
+}
+.ctrl-range-wrap input[type=range]{
+  -webkit-appearance:none;
+  width:120px;height:4px;
+  background:var(--border);border-radius:2px;cursor:pointer;
+  outline:none;
+}
+.ctrl-range-wrap input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:14px;height:14px;
+  border-radius:50%;background:var(--accent);
+  cursor:pointer;
+}
+.ctrl-val{
+  font-family:'DM Mono',monospace;
+  font-size:12px;font-weight:500;
+  color:var(--ink);min-width:48px;text-align:right;
+}
+.ctrl-divider{width:1px;height:28px;background:var(--border);}
+
+/* ── PAGE ── */
+.page{display:none;padding:28px 32px 40px;}
+.page.active{display:block;}
+
+/* ── SECTION TITLE ── */
+.section-title{
+  font-family:'DM Serif Display',serif;
+  font-size:22px;color:var(--ink);
+  margin-bottom:4px;
+}
+.section-sub{font-size:12px;color:var(--muted);margin-bottom:24px;}
+
+/* ── KPI GRID ── */
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:14px;
+  margin-bottom:28px;
+}
+.kpi-card{
+  background:var(--card-bg);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:18px 20px;
+  position:relative;
+  overflow:hidden;
+  transition:.2s;
+}
+.kpi-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--accent);
+}
+.kpi-card.positive::before{background:var(--positive);}
+.kpi-card.warn::before{background:var(--warn);}
+.kpi-card.negative::before{background:var(--negative);}
+.kpi-card.gold::before{background:var(--gold);}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
+.kpi-label{
+  font-size:10px;font-weight:600;color:var(--muted);
+  letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;
+}
+.kpi-value{
+  font-family:'DM Serif Display',serif;
+  font-size:28px;color:var(--ink);line-height:1;margin-bottom:4px;
+}
+.kpi-value.mono{
+  font-family:'DM Mono',monospace;font-size:22px;
+}
+.kpi-sub{font-size:11px;color:var(--muted);}
+.kpi-badge{
+  display:inline-block;
+  padding:2px 8px;border-radius:2px;
+  font-size:10px;font-weight:600;letter-spacing:.06em;
+  margin-top:6px;
+}
+.badge-green{background:#e8f5ee;color:var(--positive);}
+.badge-red{background:#fdecea;color:var(--negative);}
+.badge-warn{background:#fef3e2;color:var(--warn);}
+
+/* ── CHART CARDS ── */
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.chart-row.wide{grid-template-columns:2fr 1fr;}
+.chart-row.triple{grid-template-columns:1fr 1fr 1fr;}
+.chart-row.full{grid-template-columns:1fr;}
+.chart-card{
+  background:var(--card-bg);
+  border:1px solid var(--border);
+  border-radius:4px;padding:20px;
+}
+.chart-card-title{
+  font-size:12px;font-weight:600;color:var(--muted);
+  letter-spacing:.08em;text-transform:uppercase;
+  margin-bottom:4px;
+}
+.chart-card-sub{font-size:11px;color:var(--muted);margin-bottom:16px;}
+.chart-wrap{position:relative;}
+.chart-wrap canvas{max-height:260px;}
+
+/* ── TABLE ── */
+.data-table{width:100%;border-collapse:collapse;}
+.data-table th{
+  font-size:10px;font-weight:700;color:var(--muted);
+  letter-spacing:.1em;text-transform:uppercase;
+  padding:10px 12px;text-align:left;
+  border-bottom:2px solid var(--ink);
+  background:var(--cream);
+}
+.data-table td{
+  padding:10px 12px;
+  font-size:13px;border-bottom:1px solid var(--border);
+}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:rgba(200,75,49,.04);}
+.data-table td.mono{font-family:'DM Mono',monospace;font-size:12px;}
+.data-table td.pos{color:var(--positive);font-weight:600;}
+.data-table td.neg{color:var(--negative);font-weight:600;}
+.data-table td.warn{color:var(--warn);font-weight:600;}
+.verdict-pill{
+  display:inline-block;padding:3px 10px;border-radius:2px;
+  font-size:10px;font-weight:700;letter-spacing:.06em;
+}
+.vp-green{background:#e8f5ee;color:var(--positive);}
+.vp-red{background:#fdecea;color:var(--negative);}
+.vp-orange{background:#fef3e2;color:var(--warn);}
+
+/* ── TORNADO CHART ── */
+.tornado-row{
+  display:grid;grid-template-columns:150px 1fr 1fr;
+  gap:4px;align-items:center;
+  margin-bottom:6px;
+}
+.tornado-label{font-size:11px;color:var(--ink);text-align:right;padding-right:8px;}
+.tornado-bar-wrap{position:relative;height:20px;}
+.tornado-bar{
+  position:absolute;height:100%;border-radius:2px;
+  display:flex;align-items:center;justify-content:flex-end;
+  padding-right:6px;
+  font-family:'DM Mono',monospace;font-size:10px;font-weight:500;
+}
+.tornado-neg{background:rgba(192,57,43,.15);color:var(--negative);right:0;left:auto;}
+.tornado-pos{background:rgba(46,125,82,.15);color:var(--positive);left:0;}
+.tornado-axis{
+  grid-column:1/4;
+  border-top:1px dashed var(--border);
+  margin:8px 0 4px;position:relative;
+}
+.tornado-axis-label{
+  font-size:10px;color:var(--muted);text-align:center;padding-top:4px;
+  font-family:'DM Mono',monospace;
+}
+
+/* ── LCA SECTION ── */
+.lca-grid{
+  display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:20px;
+}
+.lca-card{
+  background:var(--card-bg);border:1px solid var(--border);
+  border-radius:4px;padding:16px;text-align:center;
+}
+.lca-number{
+  font-family:'DM Serif Display',serif;font-size:32px;
+  color:var(--sage);margin-bottom:4px;
+}
+.lca-unit{font-size:11px;color:var(--muted);}
+
+/* ── FLEET PAGE ── */
+.fleet-summary{
+  background:var(--ink);color:#fff;
+  border-radius:4px;padding:24px 28px;
+  margin-bottom:20px;
+  display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:20px;
+}
+.fleet-stat-label{font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;}
+.fleet-stat-value{font-family:'DM Serif Display',serif;font-size:26px;color:#fff;}
+.fleet-stat-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;}
+
+/* ── FOOTER ── */
+.dash-footer{
+  background:var(--ink);color:rgba(255,255,255,.35);
+  padding:16px 32px;font-size:11px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:'DM Mono',monospace;letter-spacing:.06em;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* ── ANNOTATION ── */
+.annotation-box{
+  border-left:3px solid var(--accent);
+  background:rgba(200,75,49,.05);
+  padding:12px 16px;border-radius:0 4px 4px 0;
+  margin-bottom:20px;
+}
+.annotation-box p{font-size:13px;line-height:1.6;color:var(--ink);}
+.annotation-box strong{color:var(--accent);}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="logo">
+    <span class="dot"></span>
+    RBS Financial Model — Petrol Two-Wheeler Retrofit
+    <span style="font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,.4);margin-left:8px;">Delhi | 2025–26</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <span class="subtitle">B.Tech Major Project · DTU Environmental Engineering</span>
+    <span class="header-badge">Revised Model</span>
+  </div>
+</header>
+
+<!-- TABS -->
+<nav class="tabs-bar">
+  <button class="tab-btn active" onclick="showTab('overview')">Overview</button>
+  <button class="tab-btn" onclick="showTab('npv')">NPV &amp; Payback</button>
+  <button class="tab-btn" onclick="showTab('sensitivity')">Sensitivity</button>
+  <button class="tab-btn" onclick="showTab('fleet')">Fleet Scale</button>
+  <button class="tab-btn" onclick="showTab('lca')">Life Cycle Assessment</button>
+  <button class="tab-btn" onclick="showTab('compare')">vs Alternatives</button>
+</nav>
+
+<!-- CONTROLS -->
+<div class="controls-strip">
+  <div class="ctrl-group">
+    <span class="ctrl-label">Scenario</span>
+    <div class="ctrl-select">
+      <select id="scenarioSel" onchange="updateAll()">
+        <option value="petrol_basic">Petrol — Basic ISG Retrofit</option>
+        <option value="petrol_hess">Petrol — Advanced HESS Retrofit</option>
+        <option value="ev_basic">E2W — Basic RBS</option>
+        <option value="ev_hess">E2W — Advanced HESS</option>
+      </select>
+    </div>
+  </div>
+  <div class="ctrl-divider"></div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Petrol (₹/L)</span>
+    <div class="ctrl-range-wrap">
+      <input type="range" id="petrolPrice" min="80" max="130" value="103" step="1" oninput="updateAll()"/>
+      <span class="ctrl-val" id="petrolPriceLbl">₹103</span>
+    </div>
+  </div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Daily km</span>
+    <div class="ctrl-range-wrap">
+      <input type="range" id="dailyKm" min="20" max="80" value="50" step="5" oninput="updateAll()"/>
+      <span class="ctrl-val" id="dailyKmLbl">50 km</span>
+    </div>
+  </div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Fuel Saving</span>
+    <div class="ctrl-range-wrap">
+      <input type="range" id="rbsPct" min="3" max="10" value="6" step="0.5" oninput="updateAll()"/>
+      <span class="ctrl-val" id="rbsPctLbl">6%</span>
+    </div>
+  </div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Discount Rate</span>
+    <div class="ctrl-range-wrap">
+      <input type="range" id="discRate" min="4" max="16" value="8" step="1" oninput="updateAll()"/>
+      <span class="ctrl-val" id="discRateLbl">8%</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: OVERVIEW ══════════ -->
+<div class="page active" id="page-overview">
+  <p class="section-title">Financial Overview</p>
+  <p class="section-sub">Per-vehicle investment and return metrics — adjust sliders above to see real-time impact</p>
+
+  <div class="annotation-box">
+    <p><strong>Key Finding:</strong> The Petrol Basic ISG retrofit delivers a <strong>payback of 3.3 years, 29% IRR</strong>, and a 10-year NPV of <strong>₹8,133 with zero subsidy</strong>. This directly addresses the financial feasibility critique. The social abatement cost is <em>negative</em> — society gains ₹16,266 per tonne CO₂ averted, compared to FAME-II's ₹40,000–80,000/tonne.</p>
+  </div>
+
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-card-title">Cumulative Cash Flow (10 Years)</div>
+      <div class="chart-card-sub">Break-even point highlighted in red</div>
+      <div class="chart-wrap"><canvas id="cashflowChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Annual Benefit Breakdown</div>
+      <div class="chart-card-sub">Composition of yearly savings</div>
+      <div class="chart-wrap"><canvas id="benefitChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-card-title">All Scenarios Compared — NPV (10yr, 8%)</div>
+      <div class="chart-card-sub">Positive NPV = financially viable without subsidy</div>
+      <div class="chart-wrap"><canvas id="npvCompareChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Payback Period Comparison</div>
+      <div class="chart-card-sub">Years to recover capital investment</div>
+      <div class="chart-wrap"><canvas id="paybackChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: NPV & PAYBACK ══════════ -->
+<div class="page" id="page-npv">
+  <p class="section-title">NPV, IRR &amp; Payback Analysis</p>
+  <p class="section-sub">Detailed year-by-year financial projection for all four scenarios</p>
+
+  <div class="chart-row full">
+    <div class="chart-card">
+      <div class="chart-card-title">Year-by-Year Cumulative Cash Flow — All Scenarios</div>
+      <div class="chart-card-sub">Zero-line = breakeven. Scenarios above zero are profitable.</div>
+      <div class="chart-wrap"><canvas id="allCashflowChart" style="max-height:300px"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom:20px;">
+    <div class="chart-card-title">Scenario Comparison Table</div>
+    <div class="chart-card-sub">All values per vehicle, 10-year horizon</div>
+    <table class="data-table" id="scenarioTable"></table>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-card-title">IRR Comparison</div>
+      <div class="chart-card-sub">Internal Rate of Return — higher is better; WACC benchmark ~10%</div>
+      <div class="chart-wrap"><canvas id="irrChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">E2W Advanced HESS: Subsidy Threshold</div>
+      <div class="chart-card-sub">Government subsidy needed to make advanced HESS viable</div>
+      <div class="chart-wrap"><canvas id="subsidyChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: SENSITIVITY ══════════ -->
+<div class="page" id="page-sensitivity">
+  <p class="section-title">Sensitivity Analysis — Tornado Chart</p>
+  <p class="section-sub">Impact of ±30% variation in key parameters on Petrol Basic ISG NPV (base: ₹8,133)</p>
+
+  <div class="chart-card" style="margin-bottom:20px;" id="tornadoCard">
+    <div class="chart-card-title">Tornado Diagram — Petrol Basic ISG</div>
+    <div class="chart-card-sub">Red = downside (−30%), Green = upside (+30%). Ordered by total impact range.</div>
+    <div id="tornadoChart" style="padding:16px 0;"></div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-card-title">NPV vs Petrol Price Scenarios</div>
+      <div class="chart-card-sub">Three RBS efficiency levels shown</div>
+      <div class="chart-wrap"><canvas id="priceNpvChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">NPV vs Daily km Ridden</div>
+      <div class="chart-card-sub">Heavy users benefit most from RBS retrofit</div>
+      <div class="chart-wrap"><canvas id="kmNpvChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-card-title">Monte Carlo — NPV Distribution (1,000 simulations)</div>
+    <div class="chart-card-sub">Random sampling of petrol price, daily km, RBS %, capital cost within realistic ranges. % of simulations with positive NPV shown.</div>
+    <div class="chart-wrap"><canvas id="monteCarloChart" style="max-height:220px"></canvas></div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: FLEET ══════════ -->
+<div class="page" id="page-fleet">
+  <p class="section-title">Fleet-Scale Impact — Delhi</p>
+  <p class="section-sub">Aggregated environmental and financial impact across the petrol two-wheeler fleet</p>
+
+  <div class="fleet-summary" id="fleetSummary"></div>
+
+  <div class="chart-row wide">
+    <div class="chart-card">
+      <div class="chart-card-title">Fleet CO₂ Reduction vs Adoption Rate</div>
+      <div class="chart-card-sub">Compared against full addressable E2W fleet benchmark (dotted line = 3,285 t/yr)</div>
+      <div class="chart-wrap"><canvas id="fleetCo2Chart" style="max-height:280px"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">E2W vs Petrol Fleet Impact</div>
+      <div class="chart-card-sub">Petrol fleet (0.5% adoption) vs full E2W addressable fleet</div>
+      <div class="chart-wrap"><canvas id="fleetCompareChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-card-title">Fleet Adoption Scenarios</div>
+    <table class="data-table" id="fleetTable"></table>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: LCA ══════════ -->
+<div class="page" id="page-lca">
+  <p class="section-title">Simplified Life Cycle Assessment</p>
+  <p class="section-sub">Cradle-to-grave GHG analysis per RBS system (ISO 14040/14044 framework)</p>
+
+  <div class="lca-grid">
+    <div class="lca-card">
+      <div class="lca-number">&lt;4</div>
+      <div class="kpi-label">months</div>
+      <div class="lca-unit">Carbon payback period<br>(all scenarios)</div>
+    </div>
+    <div class="lca-card">
+      <div class="lca-number">~12</div>
+      <div class="kpi-label">kg CO₂-eq</div>
+      <div class="lca-unit">Manufacturing embodied GHG<br>(Basic ISG)</div>
+    </div>
+    <div class="lca-card">
+      <div class="lca-number">495</div>
+      <div class="kpi-label">kg CO₂ saved</div>
+      <div class="lca-unit">Net 10-year operational savings<br>(Petrol @ 6%)</div>
+    </div>
+    <div class="lca-card">
+      <div class="lca-number">41×</div>
+      <div class="kpi-label">multiplier</div>
+      <div class="lca-unit">Operational savings vs<br>embodied GHG</div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-card-title">Embodied vs Operational GHG — All Scenarios</div>
+      <div class="chart-card-sub">Embodied (manufacturing) is negligible vs 10-year savings</div>
+      <div class="chart-wrap"><canvas id="lcaChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Carbon Payback Timeline</div>
+      <div class="chart-card-sub">Months to offset manufacturing GHG through operational savings</div>
+      <div class="chart-wrap"><canvas id="carbonPaybackChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-card-title">Bill of Materials — GHG Contribution (Petrol Basic ISG)</div>
+    <table class="data-table">
+      <thead><tr><th>Component</th><th>Mass</th><th>CO₂ Factor</th><th>GHG (kg CO₂-eq)</th><th>% of Total</th></tr></thead>
+      <tbody>
+        <tr><td>Aluminium housing</td><td class="mono">0.5 kg</td><td class="mono">9.5 kg/kg</td><td class="mono warn">4.75</td><td class="mono">38%</td></tr>
+        <tr><td>Copper wiring</td><td class="mono">0.3 kg</td><td class="mono">3.5 kg/kg</td><td class="mono warn">1.05</td><td class="mono">8%</td></tr>
+        <tr><td>Steel mounting</td><td class="mono">0.4 kg</td><td class="mono">2.0 kg/kg</td><td class="mono">0.80</td><td class="mono">6%</td></tr>
+        <tr><td>PCB / Electronics</td><td class="mono">0.08 kg</td><td class="mono">30 kg/kg</td><td class="mono warn">2.40</td><td class="mono">19%</td></tr>
+        <tr><td>Manufacturing overhead</td><td class="mono">—</td><td class="mono">—</td><td class="mono">4.50</td><td class="mono">36%</td></tr>
+        <tr style="background:var(--cream);font-weight:600;"><td>Total</td><td class="mono">—</td><td class="mono">—</td><td class="mono pos">~12.5</td><td class="mono">100%</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: COMPARE ══════════ -->
+<div class="page" id="page-compare">
+  <p class="section-title">RBS vs Alternative Interventions</p>
+  <p class="section-sub">How does petrol two-wheeler RBS retrofit compare against other energy efficiency options?</p>
+
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-card-title">NPV over 10 Years — All Interventions</div>
+      <div class="chart-card-sub">Higher = better financial return</div>
+      <div class="chart-wrap"><canvas id="compareNpvChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">CO₂ Reduction per Intervention</div>
+      <div class="chart-card-sub">Annual kg CO₂ per vehicle (mid-scenario)</div>
+      <div class="chart-wrap"><canvas id="compareCo2Chart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-card-title">Comprehensive Comparison Matrix</div>
+    <table class="data-table">
+      <thead><tr><th>Intervention</th><th>Upfront Cost (₹)</th><th>Annual Saving (₹)</th><th>Payback (yr)</th><th>NPV 10yr (₹)</th><th>CO₂/yr (kg)</th><th>Verdict</th></tr></thead>
+      <tbody id="compareTable"></tbody>
+    </table>
+  </div>
+
+  <div class="chart-row full" style="margin-top:20px;">
+    <div class="chart-card">
+      <div class="chart-card-title">Cost per Tonne CO₂ Averted — Social Perspective</div>
+      <div class="chart-card-sub">Negative = society gains money while CO₂ falls. FAME-II benchmark shown for reference.</div>
+      <div class="chart-wrap"><canvas id="abatementChart" style="max-height:220px"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="dash-footer">
+  <span>RBS PETROL TWO-WHEELER · FINANCIAL MODEL DASHBOARD · DTU ENV. ENGG. · 2025–26</span>
+  <span>Aditya Chamoli · Amritanshu · Avi Chauhan · Supervisor: Mr. Sandeep Kumar</span>
+</footer>
+
+<script>
+// ════════════════════════════════════════════════════
+//  FINANCIAL MODEL ENGINE
+// ════════════════════════════════════════════════════
+
+const SCENARIOS = {
+  petrol_basic: { name:"Petrol Basic ISG", capital:8000, annuityBase:2404, brake:200, battery:0, label:"Petrol\nBasic ISG", color:"#c84b31" },
+  petrol_hess:  { name:"Petrol Adv. HESS", capital:16800, annuityBase:3696, brake:250, battery:500, label:"Petrol\nAdv. HESS", color:"#d4a017" },
+  ev_basic:     { name:"E2W Basic RBS",    capital:2600,  annuityBase:500,  brake:150, battery:0,   label:"E2W\nBasic RBS",  color:"#3d6b4f" },
+  ev_hess:      { name:"E2W Adv. HESS",   capital:14000, annuityBase:1225, brake:200, battery:500, label:"E2W\nAdv. HESS",  color:"#2c3e50" },
+};
+
+function getParams() {
+  return {
+    petrolPrice: +document.getElementById('petrolPrice').value,
+    dailyKm:     +document.getElementById('dailyKm').value,
+    rbsPct:      +document.getElementById('rbsPct').value / 100,
+    discRate:    +document.getElementById('discRate').value / 100,
+    scenarioKey: document.getElementById('scenarioSel').value
+  };
+}
+
+function computeScenario(key, p) {
+  const s = SCENARIOS[key];
+  let annualFuelSaving = 0, annualElecSaving = 0;
+
+  if (key === 'petrol_basic' || key === 'petrol_hess') {
+    const annualL = (p.dailyKm / 35) * 250;
+    annualFuelSaving = annualL * p.rbsPct * p.petrolPrice;
+  } else {
+    const annualKwh = (p.dailyKm * 0.040) * 250;
+    const evPct = key === 'ev_basic' ? p.rbsPct * 0.6 : p.rbsPct;
+    annualElecSaving = annualKwh * evPct * 7;
+  }
+
+  const totalAnnual = annualFuelSaving + annualElecSaving + s.brake + s.battery;
+  const annuity = (1 - Math.pow(1 + p.discRate, -10)) / p.discRate;
+  const npv = -s.capital + totalAnnual * annuity;
+  const payback = s.capital / totalAnnual;
+
+  // IRR via bisection
+  let lo=-0.99, hi=3.0, irr=0;
+  for(let i=0;i<50;i++){
+    const m=(lo+hi)/2;
+    const ann=(1-Math.pow(1+m,-10))/m;
+    const n=-s.capital+totalAnnual*ann;
+    if(n>0) lo=m; else hi=m;
+    irr=m;
+  }
+
+  // Cumulative cash flows
+  const cum = [];
+  let running = -s.capital;
+  for(let yr=0;yr<=10;yr++){
+    if(yr===0){ cum.push(-s.capital); continue; }
+    running += totalAnnual;
+    cum.push(running);
+  }
+
+  return { ...s, annualTotal: totalAnnual, npv, payback, irr, cum,
+           annualFuelSaving, annualElecSaving, key };
+}
+
+function fmt(n){ return n>=0 ? '₹'+Math.abs(n).toLocaleString('en-IN',{maximumFractionDigits:0}) : '-₹'+Math.abs(n).toLocaleString('en-IN',{maximumFractionDigits:0}); }
+function fmtRaw(n){ return Math.round(n).toLocaleString('en-IN'); }
+
+// ════════════════════════════════════════════════════
+//  CHART REGISTRY
+// ════════════════════════════════════════════════════
+const charts = {};
+function getOrCreate(id, type, data, options) {
+  if(charts[id]){ charts[id].data=data; charts[id].options=options||charts[id].options; charts[id].update('none'); return charts[id]; }
+  const ctx = document.getElementById(id);
+  if(!ctx) return null;
+  charts[id] = new Chart(ctx, { type, data, options: options||{} });
+  return charts[id];
+}
+
+const baseFont = { family:"'Outfit', sans-serif", size:11 };
+const gridColor = 'rgba(0,0,0,0.06)';
+
+function chartDefaults(extra={}) {
+  return { responsive:true, maintainAspectRatio:true, plugins:{ legend:{ labels:{ font:baseFont, color:'#0f1117' } } }, scales:{ x:{ grid:{ color:gridColor }, ticks:{ font:baseFont, color:'#8a8070' } }, y:{ grid:{ color:gridColor }, ticks:{ font:baseFont, color:'#8a8070' } } }, ...extra };
+}
+
+// ════════════════════════════════════════════════════
+//  MAIN UPDATE
+// ════════════════════════════════════════════════════
+function updateAll() {
+  const p = getParams();
+  document.getElementById('petrolPriceLbl').textContent = '₹'+p.petrolPrice;
+  document.getElementById('dailyKmLbl').textContent = p.dailyKm+' km';
+  document.getElementById('rbsPctLbl').textContent = Math.round(p.rbsPct*100)+'%';
+  document.getElementById('discRateLbl').textContent = Math.round(p.discRate*100)+'%';
+
+  const scen = computeScenario(p.scenarioKey, p);
+  const all  = Object.keys(SCENARIOS).map(k => computeScenario(k, p));
+
+  renderKPIs(scen, p);
+  renderCashflow(scen, p);
+  renderBenefitBreakdown(scen);
+  renderNpvCompare(all, p);
+  renderPaybackCompare(all, p);
+  renderAllCashflow(all, p);
+  renderScenarioTable(all, p);
+  renderIRR(all, p);
+  renderSubsidy(p);
+  renderTornado(p);
+  renderPriceNpv(p);
+  renderKmNpv(p);
+  renderMonteCarlo(p);
+  renderFleet(p);
+  renderFleetTable(p);
+  renderFleetCo2(p);
+  renderFleetCompare(p);
+  renderCompare(p);
+}
+
+// ── KPIs ──────────────────────────────────────────────────
+function renderKPIs(s, p) {
+  const isPositive = s.npv >= 0;
+  const irr_pct = Math.round(s.irr * 100);
+  const annualL = (p.dailyKm / 35) * 250;
+  const fuelSaved = annualL * p.rbsPct;
+  const co2 = fuelSaved * 2.31;
+
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi-card ${isPositive?'positive':'negative'}">
+      <div class="kpi-label">10-Year NPV (${Math.round(p.discRate*100)}% discount)</div>
+      <div class="kpi-value mono" style="color:${isPositive?'var(--positive)':'var(--negative)'}">${fmt(s.npv)}</div>
+      <div class="kpi-sub">Net present value per vehicle</div>
+      <span class="kpi-badge ${isPositive?'badge-green':'badge-red'}">${isPositive?'VIABLE':'NEEDS SUBSIDY'}</span>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Simple Payback Period</div>
+      <div class="kpi-value" style="color:${s.payback<5?'var(--positive)':s.payback<8?'var(--warn)':'var(--negative)'}">${s.payback.toFixed(1)}<span style="font-size:16px"> yr</span></div>
+      <div class="kpi-sub">Capital: ${fmt(s.capital)}</div>
+    </div>
+    <div class="kpi-card positive">
+      <div class="kpi-label">Internal Rate of Return</div>
+      <div class="kpi-value" style="color:${irr_pct>12?'var(--positive)':'var(--negative)'}">${irr_pct<0?'<0':irr_pct}%</div>
+      <div class="kpi-sub">vs WACC benchmark ~10%</div>
+      <span class="kpi-badge ${irr_pct>10?'badge-green':'badge-red'}">${irr_pct>10?'ABOVE WACC':'BELOW WACC'}</span>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Annual Total Benefit</div>
+      <div class="kpi-value mono">${fmt(s.annualTotal)}</div>
+      <div class="kpi-sub">Per vehicle, per year</div>
+    </div>
+    <div class="kpi-card gold">
+      <div class="kpi-label">Annual CO₂ Avoided</div>
+      <div class="kpi-value">${Math.round(co2)}<span style="font-size:14px"> kg</span></div>
+      <div class="kpi-sub">Direct combustion savings</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Social Abatement Cost</div>
+      <div class="kpi-value" style="font-size:20px;color:${isPositive?'var(--positive)':'var(--negative)'}">${isPositive?'−':'+'} ₹${Math.round(Math.abs(s.npv)/(co2*10/1000)).toLocaleString('en-IN')}/t</div>
+      <div class="kpi-sub">Per tonne CO₂ (negative = net gain)</div>
+      <span class="kpi-badge badge-green">vs FAME-II: ₹40k–80k/t</span>
+    </div>
+  `;
+}
+
+// ── CASHFLOW ───────────────────────────────────────────────
+function renderCashflow(s, p) {
+  const years = Array.from({length:11},(_,i)=>i===0?'Y0':'Y'+i);
+  const colors = s.cum.map(v=>v>=0?'rgba(46,125,82,0.75)':'rgba(192,57,43,0.75)');
+  getOrCreate('cashflowChart','bar',{
+    labels:years,
+    datasets:[{
+      label:'Cumulative Cash Flow (₹)',
+      data:s.cum, backgroundColor:colors,
+      borderColor:colors.map(c=>c.replace('0.75','1')), borderWidth:1, borderRadius:2
+    }]
+  }, chartDefaults({ plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(c)=>'₹'+Math.round(c.raw).toLocaleString('en-IN') } } }, scales:{ x:{ticks:{font:{family:"'DM Mono',monospace",size:10}}}, y:{ticks:{callback:(v)=>'₹'+Math.round(v/1000)+'k', font:{family:"'DM Mono',monospace",size:10}}} } }));
+}
+
+// ── BENEFIT BREAKDOWN ──────────────────────────────────────
+function renderBenefitBreakdown(s) {
+  const labels = ['Fuel/Electricity Saving','Brake Pad Extension','Battery Life Extension'];
+  const vals = [Math.round(s.annualFuelSaving||s.annualElecSaving), s.brake, s.battery];
+  getOrCreate('benefitChart','doughnut',{
+    labels, datasets:[{ data:vals.filter(v=>v>0), backgroundColor:['#c84b31','#d4a017','#3d6b4f'], borderWidth:0 }]
+  }, { responsive:true, maintainAspectRatio:true, plugins:{ legend:{ position:'bottom', labels:{ font:baseFont, color:'#0f1117', padding:12 } }, tooltip:{ callbacks:{ label:(c)=>c.label+': ₹'+c.raw } } } });
+}
+
+// ── NPV COMPARE ────────────────────────────────────────────
+function renderNpvCompare(all, p) {
+  getOrCreate('npvCompareChart','bar',{
+    labels:all.map(s=>s.name),
+    datasets:[{ label:'10-Year NPV (₹)', data:all.map(s=>s.npv),
+      backgroundColor:all.map(s=>s.npv>=0?'rgba(46,125,82,0.8)':'rgba(192,57,43,0.8)'),
+      borderRadius:3, borderWidth:0 }]
+  }, chartDefaults({ plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(c)=>'NPV: ₹'+Math.round(c.raw).toLocaleString('en-IN') } } }, scales:{ y:{ ticks:{ callback:(v)=>'₹'+Math.round(v/1000)+'k', font:{family:"'DM Mono',monospace",size:10} } } } }));
+}
+
+// ── PAYBACK COMPARE ────────────────────────────────────────
+function renderPaybackCompare(all, p) {
+  getOrCreate('paybackChart','bar',{
+    labels:all.map(s=>s.name),
+    datasets:[{ label:'Payback (years)', data:all.map(s=>s.payback),
+      backgroundColor:all.map(s=>s.payback<5?'rgba(46,125,82,0.8)':s.payback<8?'rgba(212,160,23,0.8)':'rgba(192,57,43,0.8)'),
+      borderRadius:3, borderWidth:0 }]
+  }, chartDefaults({ plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(c)=>c.raw.toFixed(1)+' years' } } }, scales:{ y:{ ticks:{ callback:(v)=>v+' yr', font:{family:"'DM Mono',monospace",size:10} } } } }));
+}
+
+// ── ALL CASHFLOW ───────────────────────────────────────────
+function renderAllCashflow(all, p) {
+  const years = Array.from({length:11},(_,i)=>i===0?'Y0':'Y'+i);
+  getOrCreate('allCashflowChart','line',{
+    labels:years,
+    datasets:all.map(s=>({
+      label:s.name, data:s.cum,
+      borderColor:s.color, backgroundColor:'transparent',
+      borderWidth:2, pointRadius:3, tension:0.2
+    }))
+  }, chartDefaults({ scales:{ y:{ ticks:{ callback:(v)=>'₹'+Math.round(v/1000)+'k', font:{family:"'DM Mono',monospace",size:10} } } }, plugins:{ legend:{ labels:{ font:baseFont } } } }));
+}
+
+// ── SCENARIO TABLE ─────────────────────────────────────────
+function renderScenarioTable(all, p) {
+  const t = document.getElementById('scenarioTable');
+  t.innerHTML = `<thead><tr><th>Scenario</th><th>Capital Cost</th><th>Annual Benefit</th><th>Payback</th><th>10yr NPV</th><th>IRR</th><th>Verdict</th></tr></thead>`;
+  const tbody = document.createElement('tbody');
+  all.forEach(s=>{
+    const tr = document.createElement('tr');
+    const irr = Math.round(s.irr*100);
+    tr.innerHTML = `<td><strong>${s.name}</strong></td>
+      <td class="mono">${fmt(s.capital)}</td>
+      <td class="mono pos">${fmt(s.annualTotal)}/yr</td>
+      <td class="mono ${s.payback<5?'pos':s.payback<8?'warn':'neg'}">${s.payback.toFixed(1)} yr</td>
+      <td class="mono ${s.npv>=0?'pos':'neg'}">${fmt(s.npv)}</td>
+      <td class="mono ${irr>10?'pos':'neg'}">${irr<0?'<0':irr}%</td>
+      <td><span class="verdict-pill ${s.npv>=0?'vp-green':s.npv>-3000?'vp-orange':'vp-red'}">${s.npv>=0?'VIABLE':s.npv>-3000?'BORDERLINE':'NEEDS SUBSIDY'}</span></td>`;
+    tbody.appendChild(tr);
+  });
+  t.appendChild(tbody);
+}
+
+// ── IRR ────────────────────────────────────────────────────
+function renderIRR(all, p) {
+  getOrCreate('irrChart','bar',{
+    labels:all.map(s=>s.name),
+    datasets:[
+      { label:'IRR (%)', data:all.map(s=>Math.max(0,Math.round(s.irr*100))),
+        backgroundColor:all.map(s=>s.irr>0.10?'rgba(46,125,82,0.8)':'rgba(192,57,43,0.8)'), borderRadius:3 },
+      { label:'WACC Benchmark (10%)', data:all.map(()=>10),
+        type:'line', borderColor:'#c84b31', borderWidth:2, borderDash:[4,4], pointRadius:0 }
+    ]
+  }, chartDefaults({ plugins:{ legend:{ labels:{ font:baseFont } } }, scales:{ y:{ ticks:{ callback:(v)=>v+'%', font:{family:"'DM Mono',monospace",size:10} } } } }));
+}
+
+// ── SUBSIDY ────────────────────────────────────────────────
+function renderSubsidy(p) {
+  const s = computeScenario('ev_hess', p);
+  const subsidyLevels = [0,2000,3000,5000,7500,10000];
+  const npvs = subsidyLevels.map(sub=>{
+    const annuity = (1-Math.pow(1+p.discRate,-10))/p.discRate;
+    return -(s.capital - sub) + s.annualTotal * annuity;
+  });
+  getOrCreate('subsidyChart','bar',{
+    labels:subsidyLevels.map(s=>'₹'+s.toLocaleString('en-IN')),
+    datasets:[{ label:'NPV at Subsidy Level (₹)', data:npvs,
+      backgroundColor:npvs.map(v=>v>=0?'rgba(46,125,82,0.8)':'rgba(192,57,43,0.8)'),
+      borderRadius:3, borderWidth:0 }]
+  }, chartDefaults({ plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(c)=>'NPV: ₹'+Math.round(c.raw).toLocaleString('en-IN') } } }, scales:{ y:{ ticks:{ callback:(v)=>'₹'+Math.round(v/1000)+'k', font:{family:"'DM Mono',monospace",size:10} } } } }));
+}
+
+// ── TORNADO ─────────────────────────────────────────────────
+function renderTornado(p) {
+  const baseNPV = computeScenario('petrol_basic', p).npv;
+  const params = [
+    { name:'Petrol Price', low:{petrolPrice:Math.round(p.petrolPrice*0.7)}, high:{petrolPrice:Math.round(p.petrolPrice*1.3)} },
+    { name:'Daily km Ridden', low:{dailyKm:Math.round(p.dailyKm*0.7)}, high:{dailyKm:Math.round(p.dailyKm*1.3)} },
+    { name:'RBS Fuel Saving', low:{rbsPct:(p.rbsPct*0.7)}, high:{rbsPct:(p.rbsPct*1.3)} },
+    { name:'Discount Rate', low:{discRate:p.discRate*0.7}, high:{discRate:p.discRate*1.3} },
+    { name:'Capital Cost', low:{}, high:{} },
+    { name:'Annual Riding Days', low:{}, high:{} },
+  ];
+
+  // Manual calcs for capital and riding days
+  const annuity = (1-Math.pow(1+p.discRate,-10))/p.discRate;
+  const s = SCENARIOS['petrol_basic'];
+  const annL = (p.dailyKm/35)*250;
+  const annBen = annL*p.rbsPct*p.petrolPrice + s.brake;
+
+  const results = params.map((pm,i) => {
+    let lowNPV, highNPV;
+    if(i===4){ // capital cost
+      lowNPV = -(s.capital*0.7) + annBen*annuity;
+      highNPV = -(s.capital*1.3) + annBen*annuity;
+    } else if(i===5){ // riding days
+      const lowL = (p.dailyKm/35)*175; const highL = (p.dailyKm/35)*325;
+      lowNPV = -s.capital + (lowL*p.rbsPct*p.petrolPrice+s.brake)*annuity;
+      highNPV = -s.capital + (highL*p.rbsPct*p.petrolPrice+s.brake)*annuity;
+    } else {
+      const pLow  = {...p, ...pm.low};
+      const pHigh = {...p, ...pm.high};
+      lowNPV  = computeScenario('petrol_basic', pLow).npv;
+      highNPV = computeScenario('petrol_basic', pHigh).npv;
+    }
+    return { name:pm.name, lowNPV:Math.round(lowNPV), highNPV:Math.round(highNPV), range:Math.round(highNPV-lowNPV) };
+  }).sort((a,b)=>b.range-a.range);
+
+  const maxRange = Math.max(...results.map(r=>r.range));
+  const container = document.getElementById('tornadoChart');
+  container.innerHTML = '';
+
+  // axis label
+  const axRow = document.createElement('div');
+  axRow.style.cssText = 'display:grid;grid-template-columns:150px 1fr 1fr;gap:4px;margin-bottom:4px;';
+  axRow.innerHTML = `<div></div><div style="text-align:center;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;">−30% scenario</div><div style="text-align:center;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;">+30% scenario</div>`;
+  container.appendChild(axRow);
+
+  results.forEach(r => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:150px 1fr 1fr;gap:8px;align-items:center;margin-bottom:8px;';
+
+    const negWidth = Math.max(4, Math.abs((r.lowNPV - baseNPV) / maxRange) * 96);
+    const posWidth = Math.max(4, Math.abs((r.highNPV - baseNPV) / maxRange) * 96);
+
+    row.innerHTML = `
+      <div style="font-size:12px;color:var(--ink);text-align:right;padding-right:10px;">${r.name}</div>
+      <div style="background:rgba(192,57,43,.1);border-radius:2px;height:28px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;position:relative;">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:${negWidth}%;background:rgba(192,57,43,.25);border-radius:2px;"></div>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--negative);position:relative;z-index:1;">${fmt(r.lowNPV)}</span>
+      </div>
+      <div style="background:rgba(46,125,82,.1);border-radius:2px;height:28px;display:flex;align-items:center;padding-left:8px;position:relative;">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:${posWidth}%;background:rgba(46,125,82,.25);border-radius:2px;"></div>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--positive);position:relative;z-index:1;">${fmt(r.highNPV)}</span>
+      </div>`;
+    container.appendChild(row);
+  });
+
+  const baseRow = document.createElement('div');
+  baseRow.style.cssText = 'margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);font-size:11px;color:var(--muted);font-family:"DM Mono",monospace;';
+  baseRow.textContent = `Base case NPV: ${fmt(Math.round(baseNPV))}`;
+  container.appendChild(baseRow);
+}
+
+// ── PRICE vs NPV ───────────────────────────────────────────
+function renderPriceNpv(p) {
+  const prices = [80,85,90,95,100,103,110,115,120,125,130];
+  const levels = [0.04, 0.06, 0.08];
+  getOrCreate('priceNpvChart','line',{
+    labels:prices.map(p=>'₹'+p),
+    datasets:levels.map((lvl,i)=>({
+      label:`${Math.round(lvl*100)}% fuel saving`,
+      data:prices.map(pp=>{ const pn={...p,petrolPrice:pp,rbsPct:lvl}; return computeScenario('petrol_basic',pn).npv; }),
+      borderColor:['#c84b31','#d4a017','#3d6b4f'][i], backgroundColor:'transparent',
+      borderWidth:2, tension:0.3, pointRadius:2
+    }))
+  }, chartDefaults({ scales:{ y:{ ticks:{ callback:(v)=>'₹'+Math.round(v/1000)+'k', font:{family:"'DM Mono',monospace",size:10} } } } }));
+}
+
+// ── KM vs NPV ──────────────────────────────────────────────
+function renderKmNpv(p) {
+  const kms = [20,25,30,35,40,45,50,55,60,65,70];
+  getOrCreate('kmNpvChart','line',{
+    labels:kms.map(k=>k+' km'),
+    datasets:[{
+      label:'NPV (₹)', fill:true,
+      data:kms.map(km=>computeScenario('petrol_basic',{...p,dailyKm:km}).npv),
+      borderColor:'#c84b31', backgroundColor:'rgba(200,75,49,0.08)',
+      borderWidth:2, tension:0.3, pointRadius:2
+    }]
+  }, chartDefaults({ plugins:{ legend:{display:false} }, scales:{ y:{ ticks:{ callback:(v)=>'₹'+Math.round(v/1000)+'k', font:{family:"'DM Mono',monospace",size:10} } } } }));
+}
+
+// ── MONTE CARLO ────────────────────────────────────────────
+function renderMonteCarlo(p) {
+  const N=1000;
+  const npvs=[];
+  const annuityFn=(r)=>(1-Math.pow(1+r,-10))/r;
+  for(let i=0;i<N;i++){
+    const pp = 80+Math.random()*50;
+    const km = 25+Math.random()*55;
+    const pct= 0.03+Math.random()*0.07;
+    const cap= 6000+Math.random()*4000;
+    const dr = 0.05+Math.random()*0.08;
+    const annBen=(km/35)*250*pct*pp+200;
+    npvs.push(-cap+annBen*annuityFn(dr));
+  }
+  npvs.sort((a,b)=>a-b);
+  const positive=npvs.filter(n=>n>=0).length;
+  const bins=20;
+  const minV=npvs[0], maxV=npvs[N-1];
+  const step=(maxV-minV)/bins;
+  const hist=Array(bins).fill(0);
+  npvs.forEach(n=>{ const b=Math.min(bins-1,Math.floor((n-minV)/step)); hist[b]++; });
+  const colors=hist.map((_,i)=>{
+    const midpt=minV+(i+0.5)*step;
+    return midpt>=0?'rgba(46,125,82,0.7)':'rgba(192,57,43,0.7)';
+  });
+
+  getOrCreate('monteCarloChart','bar',{
+    labels:hist.map((_,i)=>'₹'+Math.round((minV+(i+0.5)*step)/1000)+'k'),
+    datasets:[{ label:'Frequency', data:hist, backgroundColor:colors, borderWidth:0, borderRadius:2 }]
+  }, chartDefaults({ plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(c)=>c.raw+' simulations' } }, title:{ display:true, text:`${positive/10}% of ${N} simulations: Positive NPV`, font:{ family:"'Outfit',sans-serif",size:12 }, color:'var(--sage)' } }, scales:{ x:{ ticks:{ maxRotation:45, font:{family:"'DM Mono',monospace",size:9} } }, y:{ ticks:{ font:{family:"'DM Mono',monospace",size:10} } } } }));
+}
+
+// ── FLEET ──────────────────────────────────────────────────
+function renderFleet(p) {
+  const annL = (p.dailyKm/35)*250;
+  const annSavingPerVeh = annL * p.rbsPct;
+  const adoptions = [0.005, 0.01, 0.05, 0.10];
+  const fleet = 7500000;
+  const mid = Math.round(adoptions[1]*fleet);
+  const midFuel = mid * annSavingPerVeh;
+  const midCo2 = midFuel * 2.31;
+  const midInr = midFuel * p.petrolPrice;
+
+  document.getElementById('fleetSummary').innerHTML = `
+    <div><div class="fleet-stat-label">Petrol 2W Fleet (Delhi)</div><div class="fleet-stat-value">7.5M</div><div class="fleet-stat-sub">vs 150k E2Ws</div></div>
+    <div><div class="fleet-stat-label">Addressable (all petrol)</div><div class="fleet-stat-value">100%</div><div class="fleet-stat-sub">Zero RBS penetration currently</div></div>
+    <div><div class="fleet-stat-label">At 1% Adoption</div><div class="fleet-stat-value">${Math.round(midCo2/1000).toLocaleString('en-IN')}k t</div><div class="fleet-stat-sub">Tonnes CO₂/year</div></div>
+    <div><div class="fleet-stat-label">Fuel Saving (1%)</div><div class="fleet-stat-value">₹${Math.round(midInr/1e7).toFixed(0)} Cr</div><div class="fleet-stat-sub">Per year</div></div>
+  `;
+}
+
+function renderFleetTable(p) {
+  const annL = (p.dailyKm/35)*250;
+  const tbl = document.getElementById('fleetTable');
+  const fleet=7500000;
+  tbl.innerHTML=`<thead><tr><th>Adoption %</th><th>Vehicles</th><th>Fuel Saved (M L/yr)</th><th>₹ Saving (Cr/yr)</th><th>CO₂ Avoided (t/yr)</th><th>vs E2W Fleet</th></tr></thead>`;
+  const tbody=document.createElement('tbody');
+  [[0.5,37500],[1,75000],[2,150000],[5,375000],[10,750000]].forEach(([pct,n])=>{
+    const fuelL=n*annL*p.rbsPct;
+    const co2=fuelL*2.31;
+    const inrCr=fuelL*p.petrolPrice/1e7;
+    const vsEv=(co2/3285).toFixed(1);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="mono">${pct}%</td><td class="mono">${n.toLocaleString('en-IN')}</td>
+      <td class="mono pos">${(fuelL/1e6).toFixed(1)}</td>
+      <td class="mono pos">₹${inrCr.toFixed(1)}</td>
+      <td class="mono pos">${Math.round(co2).toLocaleString('en-IN')}</td>
+      <td class="mono ${+vsEv>1?'pos':'warn'}">${vsEv}×</td>`;
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
+}
+
+function renderFleetCo2(p) {
+  const annL=(p.dailyKm/35)*250;
+  const fleet=7500000;
+  const pcts=[0.1,0.5,1,2,3,4,5,7,10];
+  getOrCreate('fleetCo2Chart','line',{
+    labels:pcts.map(p=>p+'%'),
+    datasets:[
+      { label:'Petrol Fleet CO₂ Reduction (t/yr)', data:pcts.map(pp=>fleet*(pp/100)*annL*p.rbsPct*2.31),
+        borderColor:'#c84b31',backgroundColor:'rgba(200,75,49,0.08)',fill:true,borderWidth:2,tension:0.3,pointRadius:3 },
+      { label:'E2W Full Addressable Fleet (3,285 t/yr)', data:pcts.map(()=>3285),
+        borderColor:'#3d6b4f',borderWidth:2,borderDash:[6,4],pointRadius:0,fill:false }
+    ]
+  }, chartDefaults({ scales:{ y:{ ticks:{ callback:(v)=>v.toLocaleString('en-IN')+'t', font:{family:"'DM Mono',monospace",size:10} } } } }));
+}
+
+function renderFleetCompare(p) {
+  const annL=(p.dailyKm/35)*250;
+  const petrolHalf=37500*annL*p.rbsPct;
+  getOrCreate('fleetCompareChart','bar',{
+    labels:['E2W\n(90k vehicles,\nfull addressable)','Petrol\n(37.5k vehicles,\n0.5% adoption)'],
+    datasets:[
+      { label:'CO₂ (t/yr)', data:[3285, Math.round(petrolHalf*2.31)], backgroundColor:['rgba(61,107,79,0.8)','rgba(200,75,49,0.8)'], borderRadius:3 },
+      { label:'Fuel Saving (M L/yr)', data:[0, Math.round(petrolHalf/1e5)/10], backgroundColor:['transparent','rgba(212,160,23,0.5)'], borderRadius:3 }
+    ]
+  }, chartDefaults({ plugins:{ legend:{ labels:{ font:baseFont } } }, scales:{ y:{ ticks:{ font:{family:"'DM Mono',monospace",size:10} } } } }));
+}
+
+// ── LCA ────────────────────────────────────────────────────
+function renderLCA() {
+  const scenarios=['E2W Basic','E2W HESS','Petrol ISG','Petrol HESS'];
+  const embodied=[12,19,12.5,19];
+  const annual=[36.5,54.8,49.5,66.1];
+  const lifetime10=annual.map(a=>a*10);
+  getOrCreate('lcaChart','bar',{
+    labels:scenarios,
+    datasets:[
+      { label:'Embodied GHG (kg)', data:embodied, backgroundColor:'rgba(192,57,43,0.7)', borderRadius:3 },
+      { label:'10-yr Operational Savings (kg)', data:lifetime10, backgroundColor:'rgba(46,125,82,0.7)', borderRadius:3 }
+    ]
+  }, chartDefaults({ scales:{ y:{ ticks:{ callback:(v)=>v+'kg', font:{family:"'DM Mono',monospace",size:10} } } } }));
+
+  const paybackMonths=embodied.map((e,i)=>+(e/annual[i]*12).toFixed(1));
+  getOrCreate('carbonPaybackChart','bar',{
+    labels:scenarios,
+    datasets:[{ label:'Carbon Payback (months)', data:paybackMonths,
+      backgroundColor:'rgba(61,107,79,0.75)', borderRadius:3 }]
+  }, chartDefaults({ plugins:{ legend:{display:false} }, scales:{ y:{ max:8, ticks:{ callback:(v)=>v+' mo', font:{family:"'DM Mono',monospace",size:10} } } } }));
+}
+
+// ── COMPARE ────────────────────────────────────────────────
+function renderCompare(p) {
+  const interventions = [
+    { name:'Tyre Pressure', cost:0, annualSave:300, co2:5.5, color:'#8a8070' },
+    { name:'Premium Lubricant', cost:1500, annualSave:450, co2:8.5, color:'#8a8070' },
+    { name:'Engine Tuning', cost:1000, annualSave:750, co2:13.5, color:'#8a8070' },
+    { name:'RBS Basic ISG', cost:8000, annualSave:2404, co2:49.5, color:'#c84b31' },
+    { name:'RBS HESS', cost:16800, annualSave:3696, co2:66.1, color:'#d4a017' },
+    { name:'Full EV Conversion', cost:60000, annualSave:16000, co2:225, color:'#3d6b4f' },
+  ];
+
+  const annuity=(1-Math.pow(1+p.discRate,-10))/p.discRate;
+  const withNpv=interventions.map(x=>({ ...x, npv:x.cost===0?x.annualSave*annuity:-x.cost+x.annualSave*annuity, payback:x.cost===0?0.1:x.cost/x.annualSave }));
+
+  getOrCreate('compareNpvChart','bar',{
+    labels:withNpv.map(x=>x.name),
+    datasets:[{ label:'10-yr NPV (₹)', data:withNpv.map(x=>Math.round(x.npv)),
+      backgroundColor:withNpv.map(x=>x.npv>=0?x.color:'rgba(192,57,43,0.4)'), borderRadius:3, borderWidth:0 }]
+  }, chartDefaults({ plugins:{ legend:{display:false} }, scales:{ y:{ ticks:{ callback:(v)=>'₹'+Math.round(v/1000)+'k', font:{family:"'DM Mono',monospace",size:10} } } } }));
+
+  getOrCreate('compareCo2Chart','bar',{
+    labels:withNpv.map(x=>x.name),
+    datasets:[{ label:'Annual CO₂ Reduction (kg)', data:withNpv.map(x=>x.co2),
+      backgroundColor:withNpv.map(x=>x.color), borderRadius:3, borderWidth:0 }]
+  }, chartDefaults({ plugins:{ legend:{display:false} }, scales:{ y:{ ticks:{ callback:(v)=>v+'kg', font:{family:"'DM Mono',monospace",size:10} } } } }));
+
+  // Abatement cost
+  const abatement=withNpv.map(x=>{
+    if(x.co2===0) return 0;
+    const lifetime10co2=x.co2*10/1000; // tonnes
+    return Math.round(-x.npv/lifetime10co2/1000)*1000;
+  });
+  getOrCreate('abatementChart','bar',{
+    labels:[...withNpv.map(x=>x.name),'FAME-II\nBenchmark'],
+    datasets:[{ label:'₹/tonne CO₂ averted',
+      data:[...abatement,60000],
+      backgroundColor:[...withNpv.map(x=>x.npv>=0?'rgba(46,125,82,0.75)':'rgba(192,57,43,0.75)'),'rgba(44,62,80,0.5)'],
+      borderRadius:3, borderWidth:0 }]
+  }, chartDefaults({ plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(c)=>'₹'+Math.round(c.raw).toLocaleString('en-IN')+'/t CO₂' } } }, scales:{ y:{ ticks:{ callback:(v)=>'₹'+Math.round(v/1000)+'k', font:{family:"'DM Mono',monospace",size:10} } } } }));
+
+  // table
+  const tbody=document.getElementById('compareTable');
+  tbody.innerHTML='';
+  withNpv.forEach(x=>{
+    const tr=document.createElement('tr');
+    const isRbs=x.name.includes('RBS');
+    tr.innerHTML=`<td><strong style="${isRbs?'color:var(--accent)':''}">${x.name}</strong></td>
+      <td class="mono">${x.cost===0?'Free':'₹'+x.cost.toLocaleString('en-IN')}</td>
+      <td class="mono pos">₹${Math.round(x.annualSave).toLocaleString('en-IN')}</td>
+      <td class="mono ${x.payback<5?'pos':x.payback<8?'warn':'neg'}">${x.payback<0.2?'Immediate':x.payback.toFixed(1)+' yr'}</td>
+      <td class="mono ${x.npv>=0?'pos':'neg'}">₹${Math.round(x.npv).toLocaleString('en-IN')}</td>
+      <td class="mono">${x.co2} kg</td>
+      <td><span class="verdict-pill ${x.npv>=0?'vp-green':'vp-red'}">${x.npv>=0?'VIABLE':'UNVIABLE'}</span></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ════════════════════════════════════════════════════
+//  TAB NAVIGATION
+// ════════════════════════════════════════════════════
+function showTab(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  event.target.classList.add('active');
+  // Trigger chart resize
+  setTimeout(()=>{ Object.values(charts).forEach(c=>c.resize && c.resize()); },50);
+}
+
+// ════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════
+window.addEventListener('load', ()=>{
+  renderLCA();
+  updateAll();
+});
+</script>
+</body>
+</html>
